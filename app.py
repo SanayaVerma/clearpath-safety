@@ -82,19 +82,41 @@ if st.button("Generate Comprehensive Safety Audit"):
             client = OpenAI(api_key=api_key)
             combined_descriptions = "\n".join([f"- {r['Component']}: {r['Summary']}" for r in recalls])
 
-            prompt = f"""
-            You are a Senior Automotive Safety Expert. 
-            Analyze all recalls for a {year} {make} {model}:
-            {combined_descriptions}
-            
-            1. Assign 'RED' if any risk involves fire, crashes, or steering/brake failure. Otherwise 'YELLOW'.
-            2. Provide a 3-sentence summary of the combined risk.
-            
-            FORMAT:
-            VERDICT: [RED or YELLOW]
-            SUMMARY: [Text]
-            """
+            # Updated AI Analysis Prompt
+prompt = f"""
+You are a Senior Automotive Safety Expert. Your goal is to provide an objective risk assessment.
+Analyze these recalls for a {year} {make} {model}:
+{combined_desc}
 
+### CLASSIFICATION RUBRIC:
+- **RED (Critical):** Assign ONLY if there is a direct risk of:
+    - Fire or fuel leaks.
+    - Loss of steering or braking control.
+    - Engine stalling while driving at high speeds.
+    - Airbag malfunctions (shrapnel or non-deployment).
+    - Wheels or structural components breaking.
+
+- **YELLOW (Cautionary):** Assign for all other safety issues, such as:
+    - Interior lighting or visibility issues.
+    - Minor sensors or software glitches that don't stop the car.
+    - Improper labeling or owner's manual errors.
+    - Seat adjustment or non-structural interior trim.
+    - Backup camera glitches (unless primary visibility is lost).
+
+### EXAMPLES FOR CALIBRATION:
+- "Sun visor may detach" -> YELLOW
+- "Fuel pump failure may cause engine stall" -> RED
+- "Inaccurate tire pressure label" -> YELLOW
+- "Brake booster loses vacuum" -> RED
+
+### YOUR TASK:
+1. Evaluate the recalls. If even ONE recall meets the RED criteria, the VERDICT is RED.
+2. Provide a 3-sentence summary. Be calm and factual. Do not exaggerate.
+
+FORMAT YOUR RESPONSE EXACTLY LIKE THIS:
+VERDICT: [RED or YELLOW]
+SUMMARY: [Text]
+"""
             ai_response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": prompt}]
@@ -117,4 +139,5 @@ if st.button("Generate Comprehensive Safety Audit"):
                 st.markdown('<div class="warning-yellow">⚠️ CAUTION: SAFETY REPAIRS RECOMMENDED ⚠️</div>', unsafe_allow_html=True)
             
             st.info(f"**Expert Analysis:** {summary}")
+
 
