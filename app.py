@@ -136,6 +136,7 @@ if st.button("Generate Comprehensive Safety Audit"):
             
             st.info(f"**Expert Analysis:** {summary}")
             
-            # 9. Footer with Name and Year
-            st.divider()
-            st.caption(f"Developed by Sanaya Verma | 2026 | Presidential AI Challenge Submission")
+# 9. Footer with Name and Year
+st.divider()
+st.caption(f"Developed by Sanaya Verma | 2026 | Presidential AI Challenge Submission")
+
