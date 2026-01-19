@@ -24,9 +24,9 @@ api_key = st.sidebar.text_input("OpenAI API Key", type="password")
 
 # User Input
 c1, c2, c3 = st.columns(3)
-year = c1.text_input("Year", "2010")
-make = c2.text_input("Make", "Toyota")
-model = c3.text_input("Model", "Corolla")
+year = c1.text_input("Year", "2018")
+make = c2.text_input("Make", "Tesla")
+model = c3.text_input("Model", "Model 3")
 
 if st.button("Generate Safety Report"):
     if not api_key:
@@ -89,4 +89,3 @@ if st.button("Generate Safety Report"):
                     st.markdown('<div class="warning-yellow">⚠️ SAFETY WARNING - REPAIRS RECOMMENDED ⚠️</div>', unsafe_allow_html=True)
                 
                 st.info(summary_text)
-
