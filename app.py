@@ -135,3 +135,7 @@ if st.button("Generate Comprehensive Safety Audit"):
                 st.markdown('<div class="warning-yellow">⚠️ CAUTION: SAFETY REPAIRS RECOMMENDED ⚠️</div>', unsafe_allow_html=True)
             
             st.info(f"**Expert Analysis:** {summary}")
+            
+            # 9. Footer with Name and Year
+            st.divider()
+            st.caption(f"Developed by Sanaya Verma | 2026 | Presidential AI Challenge Submission")
