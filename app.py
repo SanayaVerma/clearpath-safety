@@ -95,7 +95,6 @@ if st.button("Generate Comprehensive Safety Audit"):
                 - Loss of steering or braking control.
                 - Engine stalling while driving at high speeds.
                 - Airbag malfunctions (shrapnel or non-deployment).
-                - Wheels or structural components breaking.
 
             - **YELLOW (Cautionary):** Assign for all other safety issues, such as:
                 - Interior lighting or visibility issues.
@@ -103,10 +102,12 @@ if st.button("Generate Comprehensive Safety Audit"):
                 - Improper labeling or owner's manual errors.
                 - Seat adjustment or non-structural interior trim.
                 - Backup camera glitches (unless primary visibility is lost).
+                - Wheels or structural components breaking.
 
             ### YOUR TASK:
             1. Evaluate the recalls. If even ONE recall meets the RED criteria, the VERDICT is RED.
             2. Provide a cohesive 3-sentence summary of the combined risk. Be calm and factual.
+            3. Do not be overly conservative. Do not go by the number of risks but by their severity. 
 
             FORMAT YOUR RESPONSE EXACTLY LIKE THIS:
             VERDICT: [RED or YELLOW]
@@ -139,5 +140,6 @@ if st.button("Generate Comprehensive Safety Audit"):
 # 9. Footer with Name and Year
 st.divider()
 st.caption(f"Developed with ❤️ by Sanaya Verma | 2026 | Presidential AI Challenge Submission")
+
 
 
