@@ -26,7 +26,7 @@ st.markdown("""
 # 2. Top-Level Summary
 st.title("🚗 ClearPath Safety Assistant")
 st.markdown("""
-### Transforming Government Complexity into Family Safety
+### Empowering Families and Communities with Smarter Safety Data
 ClearPath Safety bridges the gap between technical federal databases and everyday drivers. 
 By pulling live data from the **NHTSA** and using **Advanced AI**, we provide 
 instant, plain-English clarity on vehicle safety risks that could save lives.
@@ -117,3 +117,4 @@ if st.button("Generate Comprehensive Safety Audit"):
                 st.markdown('<div class="warning-yellow">⚠️ CAUTION: SAFETY REPAIRS RECOMMENDED ⚠️</div>', unsafe_allow_html=True)
             
             st.info(f"**Expert Analysis:** {summary}")
+
