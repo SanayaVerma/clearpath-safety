@@ -82,40 +82,41 @@ if st.button("Generate Comprehensive Safety Audit"):
             client = OpenAI(api_key=api_key)
             combined_descriptions = "\n".join([f"- {r['Component']}: {r['Summary']}" for r in recalls])
 
-                # CALIBRATED PROMPT: Specific Rubric to solve the "Always Red" issue
-                prompt = f"""
-                You are a Senior Automotive Safety Expert. Your goal is to provide an objective risk assessment.
-                Analyze these recalls for a {year} {make} {model}:
-                {combined_desc}
+            # FIXED INDENTATION STARTING HERE
+            # CALIBRATED PROMPT: Specific Rubric to solve the "Always Red" issue
+            prompt = f"""
+            You are a Senior Automotive Safety Expert. Your goal is to provide an objective risk assessment.
+            Analyze these recalls for a {year} {make} {model}:
+            {combined_descriptions}
 
-                ### CLASSIFICATION RUBRIC:
-                - **RED (Critical):** Assign ONLY if there is a direct risk of:
-                    - Fire or fuel leaks.
-                    - Loss of steering or braking control.
-                    - Engine stalling while driving at high speeds.
-                    - Airbag malfunctions (shrapnel or non-deployment).
-                    - Wheels or structural components breaking.
+            ### CLASSIFICATION RUBRIC:
+            - **RED (Critical):** Assign ONLY if there is a direct risk of:
+                - Fire or fuel leaks.
+                - Loss of steering or braking control.
+                - Engine stalling while driving at high speeds.
+                - Airbag malfunctions (shrapnel or non-deployment).
+                - Wheels or structural components breaking.
 
-                - **YELLOW (Cautionary):** Assign for all other safety issues, such as:
-                    - Interior lighting or visibility issues.
-                    - Minor sensors or software glitches that don't stop the car.
-                    - Improper labeling or owner's manual errors.
-                    - Seat adjustment or non-structural interior trim.
-                    - Backup camera glitches (unless primary visibility is lost).
+            - **YELLOW (Cautionary):** Assign for all other safety issues, such as:
+                - Interior lighting or visibility issues.
+                - Minor sensors or software glitches that don't stop the car.
+                - Improper labeling or owner's manual errors.
+                - Seat adjustment or non-structural interior trim.
+                - Backup camera glitches (unless primary visibility is lost).
 
-                ### YOUR TASK:
-                1. Evaluate the recalls. If even ONE recall meets the RED criteria, the VERDICT is RED.
-                2. Provide a cohesive 3-sentence summary of the combined risk. Be calm and factual.
+            ### YOUR TASK:
+            1. Evaluate the recalls. If even ONE recall meets the RED criteria, the VERDICT is RED.
+            2. Provide a cohesive 3-sentence summary of the combined risk. Be calm and factual.
 
-                FORMAT YOUR RESPONSE EXACTLY LIKE THIS:
-                VERDICT: [RED or YELLOW]
-                SUMMARY: [Text]
-                """
+            FORMAT YOUR RESPONSE EXACTLY LIKE THIS:
+            VERDICT: [RED or YELLOW]
+            SUMMARY: [Text]
+            """
 
-                ai_response = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[{"role": "user", "content": prompt}]
-                )
+            ai_response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": prompt}]
+            )
             
             full_text = ai_response.choices[0].message.content
             risk_color = "RED" if "VERDICT: RED" in full_text.upper() else "YELLOW"
