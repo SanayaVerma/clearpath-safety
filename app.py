@@ -1,79 +1,91 @@
 import streamlit as st
 import requests
+import pandas as pd
 from openai import OpenAI
 
-# Page Setup
-st.set_page_config(page_title="ClearPath Safety", page_icon="🚗", layout="centered")
+# Page Configuration
+st.set_page_config(page_title="ClearPath Safety", page_icon="🚗", layout="wide")
 
-# CSS to make it look modern
+# Custom CSS for the "Flashing" and Alert effects
 st.markdown("""
     <style>
-    .main { background-color: #f5f7f9; }
-    .stButton>button { width: 100%; border-radius: 5px; height: 3em; background-color: #ff4b4b; color: white; }
-    .recall-card { padding: 20px; border-radius: 10px; background-color: white; border-left: 5px solid #ff4b4b; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    @keyframes flashing { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    .flash-red { color: white; background-color: #FF0000; padding: 15px; border-radius: 10px; 
+                 font-weight: bold; text-align: center; animation: flashing 1s infinite; }
+    .warning-yellow { color: black; background-color: #FFD700; padding: 15px; 
+                      border-radius: 10px; font-weight: bold; text-align: center; }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🚗 ClearPath Safety")
-st.markdown("### Bridging the gap between complex government data and family safety.")
+st.title("🚗 ClearPath Safety Assistant")
 
-# 1. Sidebar - Setup API Key from Streamlit Secrets
-# Note: When testing locally, you can replace this with a string: api_key = "your-key"
-try:
-    api_key = st.secrets["OPENAI_API_KEY"]
-except:
-    st.sidebar.warning("API Key not found in secrets. Please enter it below for testing:")
-    api_key = st.sidebar.text_input("OpenAI API Key", type="password")
+# Sidebar for API Key
+api_key = st.sidebar.text_input("OpenAI API Key", type="password")
 
-# 2. User Input
-with st.container():
-    st.write("Enter vehicle details to check for active safety recalls:")
-    c1, c2, c3 = st.columns(3)
-    year = c1.text_input("Year", value="2018")
-    make = c2.text_input("Make", value="Tesla")
-    model = c3.text_input("Model", value="Model 3")
+# User Input
+c1, c2, c3 = st.columns(3)
+year = c1.text_input("Year", "2018")
+make = c2.text_input("Make", "Tesla")
+model = c3.text_input("Model", "Model 3")
 
-if st.button("Check Safety Recalls"):
+if st.button("Generate Safety Report"):
     if not api_key:
-        st.error("Please provide an API Key to enable AI analysis.")
+        st.error("Please enter your OpenAI API key.")
     else:
-        # 3. Fetch Live Data from NHTSA (Data.gov)
-        api_url = f"https://api.nhtsa.gov/recalls/recallsByVehicle?make={make}&model={model}&modelYear={year}"
-        
-        with st.spinner("Searching National Highway Traffic Safety Administration database..."):
-            try:
-                response = requests.get(api_url)
-                results = response.json().get('results', [])
+        # 1. Fetch Data
+        url = f"https://api.nhtsa.gov/recalls/recallsByVehicle?make={make}&model={model}&modelYear={year}"
+        response = requests.get(url)
+        recalls = response.json().get('results', [])
+
+        if not recalls:
+            st.success("✅ No recalls found for this vehicle!")
+        else:
+            # 2. Display Table
+            st.subheader("📋 Official Recall List")
+            df = pd.DataFrame(recalls)[['Component', 'NHTSAActionNumber', 'ReportReceivedDate']]
+            df.columns = ['Affected Part', 'NHTSA ID', 'Date Reported']
+            st.dataframe(df, use_container_width=True)
+
+            # 3. AI Analysis (Unified Summary)
+            client = OpenAI(api_key=api_key)
+            
+            # Combine all recall descriptions into one text block for the AI
+            all_recalls_text = "\n".join([f"- {r['Component']}: {r['Summary']}" for r in recalls])
+
+            with st.spinner("AI is analyzing all safety risks..."):
+                # THE UNIFIED PROMPT
+                prompt = f"""
+                You are a Senior Automotive Safety Inspector. 
+                Below is a list of ALL active recalls for a {year} {make} {model}. 
                 
-                if not results:
-                    st.success(f"✅ No active recalls found for the {year} {make} {model}.")
+                RECALL DATA:
+                {all_recalls_text}
+
+                TASK:
+                1. Provide a single, cohesive summary (max 4 sentences) explaining the combined risk.
+                2. Assign a RISK LEVEL: 'RED' if there is a risk of fire, crashes, or sudden steering/brake failure. 'YELLOW' for all other safety issues.
+                
+                OUTPUT FORMAT:
+                RISK: [RED or YELLOW]
+                SUMMARY: [Your summary here]
+                """
+
+                ai_response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[{"role": "user", "content": prompt}]
+                )
+                
+                content = ai_response.choices[0].message.content
+                
+                # Parse Risk and Summary
+                risk_level = "RED" if "RISK: RED" in content.upper() else "YELLOW"
+                summary_text = content.split("SUMMARY:")[-1].strip()
+
+                # 4. Display Warning Sign
+                st.subheader("⚠️ AI Safety Verdict")
+                if risk_level == "RED":
+                    st.markdown('<div class="flash-red">🚨 CRITICAL SAFETY RISK DETECTED - CONTACT DEALER IMMEDIATELY 🚨</div>', unsafe_allow_html=True)
                 else:
-                    st.warning(f"⚠️ Found {len(results)} active recall(s).")
-                    
-                    # 4. AI Analysis Layer
-                    client = OpenAI(api_key=api_key)
-                    
-                    for i, recall in enumerate(results):
-                        with st.container():
-                            st.markdown(f"---")
-                            st.markdown(f"#### Recall #{i+1}: {recall['Component']}")
-                            
-                            # Show technical data in an expander
-                            with st.expander("View Official Technical Summary"):
-                                st.write(recall['Summary'])
-                            
-                            # AI "Translation"
-                            prompt = f"Explain this car recall simply for a non-expert: {recall['Summary']}"
-                            
-                            ai_msg = client.chat.completions.create(
-                                model="gpt-4o-mini",
-                                messages=[{"role": "user", "content": prompt}]
-                            )
-                            
-                            st.info(f"**AI Safety Advice:**\n\n{ai_msg.choices[0].message.content}")
-
-            except Exception as e:
-                st.error(f"Error connecting to Data.gov: {e}")
-
-st.divider()
-st.caption("Data provided by the NHTSA Recalls API via Data.gov. AI advice is for informational purposes only.")
+                    st.markdown('<div class="warning-yellow">⚠️ SAFETY WARNING - REPAIRS RECOMMENDED ⚠️</div>', unsafe_allow_html=True)
+                
+                st.info(summary_text)
