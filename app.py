@@ -2,90 +2,118 @@ import streamlit as st
 import requests
 import pandas as pd
 from openai import OpenAI
+import time
 
-# Page Configuration
+# 1. Page Configuration & Custom CSS
 st.set_page_config(page_title="ClearPath Safety", page_icon="🚗", layout="wide")
 
-# Custom CSS for the "Flashing" and Alert effects
 st.markdown("""
     <style>
-    @keyframes flashing { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-    .flash-red { color: white; background-color: #FF0000; padding: 15px; border-radius: 10px; 
-                 font-weight: bold; text-align: center; animation: flashing 1s infinite; }
-    .warning-yellow { color: black; background-color: #FFD700; padding: 15px; 
-                      border-radius: 10px; font-weight: bold; text-align: center; }
+    @keyframes flashing { 0% { opacity: 1; } 50% { opacity: 0.2; } 100% { opacity: 1; } }
+    .flash-red { 
+        background-color: #FF0000; color: white; padding: 20px; 
+        border-radius: 10px; font-weight: bold; text-align: center;
+        font-size: 24px; animation: flashing 1s infinite;
+    }
+    .warning-yellow { 
+        background-color: #FFD700; color: black; padding: 20px; 
+        border-radius: 10px; font-weight: bold; text-align: center;
+        font-size: 20px;
+    }
     </style>
     """, unsafe_allow_html=True)
 
+# 2. Top-Level Summary
 st.title("🚗 ClearPath Safety Assistant")
+st.markdown("""
+### Transforming Government Complexity into Family Safety
+ClearPath Safety bridges the gap between technical federal databases and everyday drivers. 
+By pulling live data from the **NHTSA** and using **Advanced AI**, we provide 
+instant, plain-English clarity on vehicle safety risks that could save lives.
+""")
 
-# Sidebar for API Key
-api_key = st.sidebar.text_input("OpenAI API Key", type="password")
+# 3. Sidebar for API Key (Picked from Secrets)
+api_key = st.secrets.get("OPENAI_API_KEY", "")
+if not api_key:
+    api_key = st.sidebar.text_input("Enter OpenAI API Key (if not in secrets)", type="password")
 
-# User Input
-c1, c2, c3 = st.columns(3)
-year = c1.text_input("Year", "2018")
-make = c2.text_input("Make", "Tesla")
-model = c3.text_input("Model", "Model 3")
+# 4. User Input Section
+st.subheader("🔍 Step 1: Enter Your Vehicle Information")
+col1, col2, col3 = st.columns(3)
+year = col1.text_input("Year", "2010")
+make = col2.text_input("Make", "Toyota")
+model = col3.text_input("Model", "Corolla")
 
-if st.button("Generate Safety Report"):
+if st.button("Generate Comprehensive Safety Audit"):
     if not api_key:
-        st.error("Please enter your OpenAI API key.")
+        st.error("Missing API Key. Please add it to Streamlit Secrets or the sidebar.")
     else:
-        # 1. Fetch Data
+        # 5. Progress Bar Setup
+        progress_bar = st.progress(0, text="Initializing...")
+        
+        # Phase A: Download from NHTSA
+        progress_bar.progress(25, text="Downloading records from NHTSA (Data.gov)...")
         url = f"https://api.nhtsa.gov/recalls/recallsByVehicle?make={make}&model={model}&modelYear={year}"
         response = requests.get(url)
         recalls = response.json().get('results', [])
+        time.sleep(1) # Visual pause for the demo
 
         if not recalls:
-            st.success("✅ No recalls found for this vehicle!")
+            progress_bar.progress(100, text="Completed.")
+            st.success(f"✅ No active recalls found for the {year} {make} {model}!")
         else:
-            # 2. Display Table
-            st.subheader("📋 Official Recall List")
-            df = pd.DataFrame(recalls)[['Component', 'NHTSAActionNumber', 'ReportReceivedDate']]
-            df.columns = ['Affected Part', 'NHTSA ID', 'Date Reported']
+            # 6. Tabulated Data (Index starting from 1)
+            st.subheader("📋 Official Recall Notices")
+            df = pd.DataFrame(recalls)
+            df.index = range(1, len(df) + 1)  # Set index to start from 1
             st.dataframe(df, use_container_width=True)
 
-            # 3. AI Analysis (Unified Summary)
+            # 7. Download Link for CSV
+            csv = df.to_csv(index=True).encode('utf-8')
+            st.download_button(
+                label="📥 Download Raw Data as CSV",
+                data=csv,
+                file_name=f"{year}_{make}_{model}_recalls.csv",
+                mime="text/csv",
+            )
+
+            # Phase B: AI Generation
+            progress_bar.progress(60, text="AI is evaluating safety risks and generating your summary...")
             client = OpenAI(api_key=api_key)
+            combined_descriptions = "\n".join([f"- {r['Component']}: {r['Summary']}" for r in recalls])
+
+            prompt = f"""
+            You are a Senior Automotive Safety Expert. 
+            Analyze all recalls for a {year} {make} {model}:
+            {combined_descriptions}
             
-            # Combine all recall descriptions into one text block for the AI
-            all_recalls_text = "\n".join([f"- {r['Component']}: {r['Summary']}" for r in recalls])
+            1. Assign 'RED' if any risk involves fire, crashes, or steering/brake failure. Otherwise 'YELLOW'.
+            2. Provide a 3-sentence summary of the combined risk.
+            
+            FORMAT:
+            VERDICT: [RED or YELLOW]
+            SUMMARY: [Text]
+            """
 
-            with st.spinner("AI is analyzing all safety risks..."):
-                # THE UNIFIED PROMPT
-                prompt = f"""
-                You are a Senior Automotive Safety Inspector. 
-                Below is a list of ALL active recalls for a {year} {make} {model}. 
-                
-                RECALL DATA:
-                {all_recalls_text}
+            ai_response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": prompt}]
+            )
+            
+            full_text = ai_response.choices[0].message.content
+            risk_color = "RED" if "VERDICT: RED" in full_text.upper() else "YELLOW"
+            summary = full_text.split("SUMMARY:")[-1].strip()
 
-                TASK:
-                1. Provide a single, cohesive summary (max 4 sentences) explaining the combined risk.
-                2. Assign a RISK LEVEL: 'RED' if there is a risk of fire, crashes, or sudden steering/brake failure. 'YELLOW' for all other safety issues.
-                
-                OUTPUT FORMAT:
-                RISK: [RED or YELLOW]
-                SUMMARY: [Your summary here]
-                """
+            # Finalize Progress
+            progress_bar.progress(100, text="Safety Audit Complete.")
+            time.sleep(0.5)
+            progress_bar.empty()
 
-                ai_response = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[{"role": "user", "content": prompt}]
-                )
-                
-                content = ai_response.choices[0].message.content
-                
-                # Parse Risk and Summary
-                risk_level = "RED" if "RISK: RED" in content.upper() else "YELLOW"
-                summary_text = content.split("SUMMARY:")[-1].strip()
-
-                # 4. Display Warning Sign
-                st.subheader("⚠️ AI Safety Verdict")
-                if risk_level == "RED":
-                    st.markdown('<div class="flash-red">🚨 CRITICAL SAFETY RISK DETECTED - CONTACT DEALER IMMEDIATELY 🚨</div>', unsafe_allow_html=True)
-                else:
-                    st.markdown('<div class="warning-yellow">⚠️ SAFETY WARNING - REPAIRS RECOMMENDED ⚠️</div>', unsafe_allow_html=True)
-                
-                st.info(summary_text)
+            # 8. Visual Warning Sign & Verdict
+            st.subheader("⚠️ AI Safety Verdict")
+            if risk_color == "RED":
+                st.markdown('<div class="flash-red">🚨 CRITICAL RISK: IMMEDIATE ACTION REQUIRED 🚨</div>', unsafe_allow_html=True)
+            else:
+                st.markdown('<div class="warning-yellow">⚠️ CAUTION: SAFETY REPAIRS RECOMMENDED ⚠️</div>', unsafe_allow_html=True)
+            
+            st.info(f"**Expert Analysis:** {summary}")
