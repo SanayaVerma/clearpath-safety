@@ -1,19 +1,54 @@
-# ClearPath Safety: Presidential AI Challenge Submission
+# 🚗 ClearPath Safety Assistant
+### Empowering Families with Smarter Safety Data
 
-## 1. Community Problem & Impact
-Vehicle safety is a critical concern for every community, yet official government recall notices are often written in dense, technical "legalese" that is difficult for the average driver to understand. When a family receives a notice about a "steering column intermediate shaft bolt," they may not realize it means their car could lose steering control while driving. This information gap leads to many vehicles remaining unrepaired, posing a risk to the drivers, their families, and everyone on the road. ClearPath Safety solves this by using AI to translate complex Data.gov recall summaries into clear, actionable advice.
+Hi! I'm **Sanaya Verma**, a high school freshman, and I built **ClearPath Safety** for the Presidential AI Challenge. My goal was to take confusing government data and make it actually useful for normal people so they can stay safe on the road.
 
-## 2. Technical Implementation & AI Component
-The application is built using **Python** and the **Streamlit** framework for a responsive web interface. 
-- **Data Source:** It connects to the live **NHTSA (National Highway Traffic Safety Administration) API** from Data.gov to fetch real-time safety records.
-- **AI Integration:** I integrated the **OpenAI GPT-4o-mini** model. Rather than just acting as a chatbot, the AI acts as a data-processor. It receives the raw JSON response from the government database and uses a custom system prompt to perform "text-simplification" and "urgency classification." 
-- **The AI Logic:** The core of the solution is the prompt engineering that instructs the AI to identify the specific danger (e.g., fire risk vs. cosmetic issue) and provide a concrete next step for the user.
+## 📺 Watch the Demo
+[![ClearPath Safety Demo Video](https://img.youtube.com/vi/S-9piUDKZXg/0.jpg)](https://youtu.be/S-9piUDKZXg)
+*Click the image above to watch the walkthrough of how the app works!*
 
-## 3. Challenges & Innovation
-One major challenge was handling the volume of data. Some older car models have dozens of recalls. I had to design the UI using "expanders" so the user isn't overwhelmed. Innovation-wise, most recall tools just give you a link to a PDF. ClearPath is unique because it interprets that PDF content in real-time, providing immediate clarity without requiring the user to do extra research.
+---
 
-## 4. Responsible AI & Accuracy
-To ensure responsible use, the app includes a clear disclaimer that AI advice is for informational purposes. To verify accuracy, I tested the outputs against known major recalls (like the Takata Airbag recall) to ensure the AI did not downplay high-risk situations. By using a "Grounding" technique—where the AI is strictly limited to summarizing the provided government text—I significantly reduced the risk of AI "hallucinations."
+## 📖 Why I Built This (The Problem)
+Most people get recall notices in the mail and just throw them away because they’re full of "legalese" and technical talk. It’s hard to tell if a recall is just about a sticker on the visor or if your brakes might actually fail. I wanted to build a tool that tells you exactly how dangerous a car defect is in plain English.
 
-## 5. Reflections & Learning
-Building ClearPath Safety deepened my understanding of how APIs work and the importance of "Human-Centric AI." I learned that AI is most powerful when it acts as a bridge between high-level data and everyday people. This project taught me how to manage API keys securely using Streamlit Secrets and how to design a tool that is truly accessible to my community.
+## 🎯 Who Is This For?
+* **Parents:** To make sure the car they use for carpool is safe for their kids.
+* **Teen Drivers:** Like me and my friends, who might be buying their first used car and need to check its history.
+* **Community Members:** Who find government websites overwhelming or hard to navigate.
+
+---
+
+## 🛠️ How I Made It (The Tech Stack)
+I used a modern Python data stack to build this:
+* **Python & Streamlit:** I used Python for the logic and Streamlit to turn that code into a professional website.
+* **NHTSA Live Data:** My app connects directly to the **National Highway Traffic Safety Administration API**. Every time you search, you're getting official, up-to-the-minute info.
+* **OpenAI (GPT-4o-mini):** I used AI to read through technical descriptions and summarize them so they are easy to understand.
+
+### 1. Training the AI (Severity Classification)
+One of the hardest parts was "calibrating" the AI. I didn't want it to flag every little thing as a crisis. I used **Prompt Engineering** to create a specific rubric:
+* **Red Alerts 🔴:** Only triggered for critical risks like fire, loss of control, or airbag failure.
+* **Yellow Warnings 🟡:** Used for minor software glitches, labels, or interior issues.
+
+
+
+### 2. Handling Data & Transparency
+Transparency is super important in AI. Even though the AI summarizes the info, I used the **Pandas** library to organize the official data in a table. I also added a **Download CSV** button so users can take the raw data to their mechanic.
+
+### 3. Safety & Security
+Since I'm using an API key from OpenAI, I had to make sure it was secure. I used **Streamlit Secrets** to hide my private key so that it’s never exposed in the public code on GitHub.
+
+---
+
+## 🚀 Check It Out
+* **Live App:** [https://clearpath-safety.streamlit.app/](https://clearpath-safety.streamlit.app/)
+* **Demo Video:** [https://youtu.be/S-9piUDKZXg](https://youtu.be/S-9piUDKZXg)
+
+## ✨ Credits & Acknowledgments
+I used several tools to help me build and document this project:
+* **Gemini:** Helped me with AI-assisted code generation, logic optimization, and drafting/refining the project narrative.
+* **GitHub:** Used for version control and hosting my code.
+* **OpenAI:** Provided the models that power the safety analysis.
+
+---
+**Created by Sanaya Verma | Class of 2029 | 2026 Presidential AI Challenge**
