@@ -5,6 +5,7 @@ Hi! I'm **Sanaya Verma**, a high school freshman, and I built **ClearPath Safety
 
 ## 📺 Watch the Demo
 [![ClearPath Safety Demo Video](https://img.youtube.com/vi/S-9piUDKZXg/0.jpg)](https://youtu.be/S-9piUDKZXg)
+
 *Click the image above to watch the walkthrough of how the app works!*
 
 ---
@@ -51,4 +52,5 @@ I used several tools to help me build and document this project:
 * **OpenAI:** Provided the models that power the safety analysis.
 
 ---
-**Created by Sanaya Verma | Class of 2029 | 2026 Presidential AI Challenge**
+**Created by Sanaya Verma | 2026 Presidential AI Challenge**
+
